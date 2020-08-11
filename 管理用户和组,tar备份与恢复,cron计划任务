@@ -1,0 +1,104 @@
+NSD ADMIN DAY04
+1.	案例1：配置用户和组账号 
+2.	案例2：创建一个备份包 
+3.	案例3：配置一个cron任务 
+1 案例1：配置用户和组账号
+1.1 问题
+本例要求创建下列用户、组以及组的成员关系：
+1.	新建用户 alex，其用户ID为3456，密码是flectrag 
+2.	创建一个名为 adminuser 的组 
+3.	创建一个名为 natasha 的用户，其属于 adminuser 组，这个组是该用户的从属组 
+4.	创建一个名为 harry 的用户，其属于 adminuser 组，这个组是该用户的从属组 
+5.	创建一个名为 sarah 的用户，其在系统中没有可交互的 Shell，并且不是 adminuser 组的成员 
+6.	natasha 、harry、sarah 的密码都要设置为 flectrag 
+1.2 步骤
+实现此案例需要按照如下步骤进行。
+步骤一：创建组账号
+1.	[root@server0 ~]# groupadd  adminuser
+步骤二：按照要求的属性创建用户账号
+1.	[root@server0 ~]# useradd  -u  3456  alex
+2.	
+3.	[root@server0 ~]# useradd  -G  adminuser  natasha
+4.	[root@server0 ~]# useradd  -G  adminuser  harry
+5.	[root@server0 ~]# useradd  -s  /sbin/nologin  sarah
+步骤三：为用户设置登录密码
+1.	[root@server0 ~]# echo  flectrag  |  passwd  --stdin  alex
+2.	更改用户 alex 的密码 。
+3.	passwd：所有的身份验证令牌已经成功更新。
+4.	
+5.	[root@server0 ~]# echo  flectrag  |  passwd  --stdin  natasha
+6.	更改用户 natasha 的密码 。
+7.	passwd：所有的身份验证令牌已经成功更新。
+8.	[root@server0 ~]# echo  flectrag  |  passwd  --stdin  harry
+9.	更改用户 harry 的密码 。
+10.	passwd：所有的身份验证令牌已经成功更新。
+11.	[root@server0 ~]# echo  flectrag  |  passwd  --stdin  sarah
+12.	更改用户 sarah 的密码 。
+13.	passwd：所有的身份验证令牌已经成功更新。
+2 案例2：创建一个备份包
+2.1 问题
+本例要求使用 tar 工具完成以下备份任务：
+1.	创建一个名为 /root/backup.tar.bz2 的归档文件 
+2.	其中包含 /usr/local 目录中的内容 
+3.	tar 归档必须使用 bzip2 进行压缩 
+2.2 方案
+制作归档压缩包：
+•	tar -zPcf 备份文件.tar.gz 文档.... 
+•	tar -jPcf 备份文件.tar.bz2 文档.... 
+•	tar -JPcf 备份文件.tar.xz 文档.... 
+查看归档压缩包：
+•	tar -tf 备份文件 
+释放归档压缩包：
+•	tar -xf 备份文件 [-C 目标目录] 
+2.3 步骤
+实现此案例需要按照如下步骤进行。
+步骤一：创建备份文件
+使用tar命令制作归档备份，结合-j选项调用bzip2压缩工具，保留绝对路径：
+1.	[root@server0 ~]# tar  jcPf  /root/backup.tar.bz2  /usr/local/
+步骤二：确认结果
+1.	[root@server0 ~]# ls  -lh  /root/backup.tar.bz2          //确认文件
+2.	-rw-r--r--. 1 root root 1.9K 12月 23 23:22 /root/backup.tar.bz2
+3.	
+4.	[root@server0 ~]# tar  tPf  /root/backup.tar.bz2         //确认内容
+5.	/usr/local/
+6.	/usr/local/bin/
+7.	/usr/local/bin/lab
+8.	/usr/local/etc/
+9.	/usr/local/games/
+3 案例3：配置一个cron任务
+3.1 问题
+本例要求为用户 natasha 配置一个定时任务，具体要求如下：
+1.	每天在本地时间 14:23 执行 
+2.	需要完成的任务操作为 /bin/echo hiya 
+3.2 方案
+配置格式可参考 /etc/crontab 文件：
+1.	分  时  日  月  周      任务命令行（绝对路径）
+在表示各段的时间点时，除了明确的数值以外，还可以参考以下形式：
+•	*：匹配范围内任意时间 
+•	,：分隔多个不连续的时间点 
+•	-：指定连续时间范围 
+•	/n：指定时间频率，每n ... 
+3.3 步骤
+实现此案例需要按照如下步骤进行。
+步骤一：配置crontab任务记录
+1）确保系统服务crond可用
+1.	[root@server0 ~]# systemctl  restart  crond
+2.	[root@server0 ~]# systemctl  enable  crond
+2）为用户natasha添加计划任务
+1.	[root@server0 ~]# crontab  -e  -u  natasha
+2.	23  14  *  *  *  /bin/echo hiya
+步骤二：检查任务是否执行
+1）将系统日期时间临时调整到任务时间点前10秒左右
+1.	[root@server0 ~]# date  -s  '14:22:50'              //设置
+2.	Sat Nov 26 14:22:50 CST 2016
+3.	[root@server0 ~]# date                              //确认日期时间
+4.	Sat Nov 26 14:22:55 CST 2016
+2）等待10秒后查看/var/log/cron日志，应该会有执行记录
+1.	[root@server0 ~]# tail  /var/log/cron
+2.	.. ..
+3.	Nov 26 14:23:02 localhost CROND[3818]: (natasha) CMD (/bin/echo hiya)
+3）恢复系统日期时间
+1.	[root@server0 ~]# hwclock  -s                      //重设为系统时钟
+2.	[root@server0 ~]# date                             //确认日期时间
+3.	Sat Nov 26 05:05:23 CST 2016
+
