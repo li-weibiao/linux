@@ -1,0 +1,76 @@
+9.1 Jenkins介绍
+持续化集成是在不断变化的需求中，快速适应和保证软件的质量的，一种软件开发实践。
+而每次集成都是通过自动化的构建来验证的，包括自动编译，发布和测试。
+
+集成是指集成测试。
+
+持续是指长期对项目代码进行集成测试。
+
+持续交付指的是频繁的将软件的新版本交付给质量团队或用户以供评审。如果评审通过，代码就进入生产阶段。
+持续交付可以看做持续集成的下一步。它强调的是不管怎么更新，软件是随时随地可以交付的。
+
+持续部署是持续交付的下一步，指的是代码通过评审以后，自动部署到生产环境。持续部署的目标是，代码在任何时候都是可部署的，可以进入生产阶段。
+持续部署的前提是能自动化完成测试，构建，部署等步骤。
+
+Jenkins是一个基于Web界面平台开源的，可扩展的持续集成，交付，部署（软件代码的编译，打包，部署）的工具。能实时监控集成中存在的错误，提供详细的日志文件和提醒功能，还能用图表的形式形象的展示项目构建的趋势和稳定性。
+
+9.2 Jenkins安装
+安装Jenkins需要安装JDK，JDK版本必须高于或等于1.8。可用源码安装JDK，也可以用yum安装openjdk。
+# yum install -y java-1.8.0-openjdk
+
+安装Jenkins工具的yum源，设置好yum源后使用rpm命令安装Jenkins的Key，因为在Jenkins的yum源配置文件中gpgcheck=1，所以需要安装Jenkins的Key,命令如下：
+# wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat/jenkins.repo
+# ls /etc/yum.repos.d/jenkins.repo 
+/etc/yum.repos.d/jenkins.repo
+# rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
+
+使用yum命令安装Jenkins，安装后启动Jenkins服务，命令如下：
+# yum -y install jenkins
+# systemctl start jenkins
+# ps aux | grep jenkins
+# netstat -lntp | grep 8080
+tcp6       0      0 :::8080                 :::*                    LISTEN      7616/java
+
+Jenkins的日志文件是/var/log/jenkins/jenkins.log，通过该日志文件可查看admin密码，也可以
+到/var/lib/jenkins/secrets/initialAdminPassword文件中中查看密码，命令如下：
+# less /var/log/jenkins/jenkins.log | grep -A5 password
+...
+Please use the following password to proceed to installation:
+
+559f6bd06c544076a18f05fccb2bebcc  # 初始化Jenkins密码
+...
+
+打开浏览器，在地址栏中输入ip和port进行Jenkins的安装。
+
+单击“继续”按钮选择要安装的插件，默认安装官方提供的插件，无需自定义。
+插件安装完成后要求设置管理员账户和密码，与搭建开源Web网站一样，安装完成后会看到jenkins后台管理界面。
+
+在/etc/sysconfig/目录下有一个jenkins文件，该文件是jenkins的配置文件，命令如下：
+# ls /etc/sysconfig/jenkins
+/etc/sysconfig/jenkins
+
+jenkins程序主目录在/var/lib/jenkins/目录下，jobs目录下存放的是在jenkins浏览器界面中创建的任务。在jenkins后台创建一个“叮当猫”的任务，在jobs目录下就会生成一个“叮当猫”的目录，命令如下：
+# ls /var/lib/jenkins/jobs/
+叮当猫
+# ls /var/lib/jenkins/jobs/叮当猫/
+builds  config.xml
+
+logs目录是jenkins日志相关的目录；nodes是多节点时用到的目录；plugins是jenkins插件所在的目录，该目录下有很多插件，如果新建一个插件，插件会自动保存到该目录下，命令如下：
+# ls /var/lib/jenkins/logs/
+tasks
+# ls /var/lib/jenkins/nodes/
+# ls /var/lib/jenkins/plugins/
+ace-editor
+ace-editor.jpi
+ant
+antisamy-markup-formatter
+...
+
+secrets是jenkins密码、密钥存放的目录；users是与用户相关的目录，命令如下：
+# ls /var/lib/jenkins/users/
+root_6125980855622948256  users.xml
+
+如果需要备份jenkins，直接把/var/lib/jenkins/目录下的文件或目录打包到新服务器上即可，jenkins无需借助数据库存储数据，它的配置全部存在XML格式的文件中。
+
+
+
